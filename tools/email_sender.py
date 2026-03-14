@@ -98,6 +98,10 @@ async def send_email(
 
     recipients = [to] + ([cc] if cc else [])
 
+    # Determine TLS mode based on port
+    use_direct_tls = (cfg["port"] == 465)
+    use_start_tls  = (cfg["port"] == 587) and cfg["use_tls"]
+
     try:
         await aiosmtplib.send(
             msg,
@@ -105,7 +109,9 @@ async def send_email(
             port=cfg["port"],
             username=cfg["user"],
             password=cfg["password"],
-            start_tls=cfg["use_tls"],
+            use_tls=use_direct_tls,
+            start_tls=use_start_tls,
+            timeout=15,  # Increase timeout for cloud networks
         )
         return {"success": True, "message": f"Email sent to {to}"}
 
